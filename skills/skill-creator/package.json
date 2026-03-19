@@ -1,0 +1,13 @@
+{
+  "name": "skill-creator",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Utilities for the skill-creator Pi skill",
+  "license": "UNLICENSED",
+  "scripts": {
+    "validate-skill": "node scripts/validate_skill.js"
+  },
+  "dependencies": {
+    "yaml": "^2.8.1"
+  }
+}
