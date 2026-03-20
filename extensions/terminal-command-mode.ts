@@ -1,9 +1,8 @@
 import { spawnSync } from "node:child_process";
 import type { ExtensionAPI, ExtensionContext } from "@mariozechner/pi-coding-agent";
-import { Text, matchesKey } from "@mariozechner/pi-tui";
+import { Text } from "@mariozechner/pi-tui";
 
 const MODE_STATUS_KEY = "terminal-mode";
-const TOGGLE_SHORTCUT = "ctrl+shift+tab";
 const MAX_OUTPUT_LINES = 220;
 const INTERACTIVE_PREFIXES = [
 	"vim",
@@ -31,19 +30,6 @@ const INTERACTIVE_PREFIXES = [
 
 export default function (pi: ExtensionAPI) {
 	let terminalMode = false;
-	let terminalToggleInputUnsubscribe: (() => void) | undefined;
-
-	function bindTerminalToggleInput(ctx: ExtensionContext) {
-		if (!ctx.hasUI) return;
-		terminalToggleInputUnsubscribe?.();
-		terminalToggleInputUnsubscribe = ctx.ui.onTerminalInput((data) => {
-			const isPrimaryShortcut = matchesKey(data, TOGGLE_SHORTCUT);
-			const isShiftTabFallback = TOGGLE_SHORTCUT === "ctrl+shift+tab" && matchesKey(data, "shift+tab");
-			if (!isPrimaryShortcut && !isShiftTabFallback) return undefined;
-			setTerminalMode(ctx, !terminalMode);
-			return { consume: true };
-		});
-	}
 
 	function renderMode(ctx: ExtensionContext) {
 		if (!ctx.hasUI) return;
@@ -147,24 +133,10 @@ export default function (pi: ExtensionAPI) {
 
 	pi.on("session_start", async (_event, ctx) => {
 		renderMode(ctx);
-		bindTerminalToggleInput(ctx);
 	});
 
 	pi.on("session_switch", async (_event, ctx) => {
 		renderMode(ctx);
-		bindTerminalToggleInput(ctx);
-	});
-
-	pi.on("session_shutdown", async () => {
-		terminalToggleInputUnsubscribe?.();
-		terminalToggleInputUnsubscribe = undefined;
-	});
-
-	pi.registerShortcut(TOGGLE_SHORTCUT, {
-		description: "Toggle shell command mode",
-		handler: async (ctx) => {
-			setTerminalMode(ctx, !terminalMode);
-		},
 	});
 
 	pi.registerCommand("term", {
