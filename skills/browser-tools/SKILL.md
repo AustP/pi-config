@@ -5,7 +5,7 @@ description: Interactive browser automation via Chrome DevTools Protocol. Use wh
 
 # Browser Tools
 
-Chrome DevTools Protocol tools for agent-assisted web automation. These tools connect to Chrome running on `:9222` with remote debugging enabled.
+Chrome DevTools Protocol tools for agent-assisted web automation. These tools connect to a Brave/Chromium browser running on `:9222` with remote debugging enabled.
 
 ## Setup
 
@@ -16,14 +16,14 @@ cd {baseDir}/browser-tools
 npm install
 ```
 
-## Start Chrome
+## Start Browser
 
 ```bash
 {baseDir}/browser-start.js              # Fresh profile
 {baseDir}/browser-start.js --profile    # Copy user's profile (cookies, logins)
 ```
 
-Launch Chrome with remote debugging on `:9222`. Use `--profile` to preserve user's authentication state.
+Launch Brave with remote debugging on `:9222` (or connect to an existing browser already exposing `:9222`). Use `--profile` to preserve user's authentication state.
 
 ## Navigate
 
