@@ -1,6 +1,7 @@
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
+import * as fs from "node:fs";
 import * as path from "node:path";
-import { prompt } from "/Users/aust/src/glimpse/src/glimpse.mjs";
+import { prompt } from "/Users/aust/projects/pi/glimpse/src/glimpse.mjs";
 
 const DIALOG_OPTIONS = {
   width: 560,
@@ -18,6 +19,44 @@ function escapeHtml(text: string): string {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
+}
+
+function parseEnvKeyNames(content: string): string[] {
+  const keys = new Set<string>();
+
+  for (const rawLine of content.split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith("#")) continue;
+
+    const match = line.match(/^(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=/);
+    if (match) {
+      keys.add(match[1]);
+    }
+  }
+
+  return Array.from(keys).sort((a, b) => a.localeCompare(b));
+}
+
+function buildEnvReadBlockReason(filePath: string, absolutePath: string): string {
+  try {
+    const content = fs.readFileSync(absolutePath, "utf8");
+    const keys = parseEnvKeyNames(content);
+    const keyList = keys.length > 0 ? keys.join(", ") : "(no keys detected)";
+
+    return [
+      `Read blocked for ${filePath}: .env values are redacted by security policy.`,
+      `Detected key names: ${keyList}`,
+      "The read tool cannot reveal .env values.",
+      "You can still reference these keys in code (for example: process.env.KEY_NAME).",
+    ].join("\n");
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    return [
+      `Read blocked for ${filePath}: .env values are redacted by security policy.`,
+      "The read tool cannot reveal .env values.",
+      `Could not parse key names: ${message}`,
+    ].join("\n");
+  }
 }
 
 async function confirmWithPopup(title: string, detail: string): Promise<boolean> {
@@ -123,8 +162,10 @@ export default function (pi: ExtensionAPI) {
     { pattern: /:\(\)\s*\{\s*:\s*\|\s*:\s*&\s*\}\s*;/, desc: "fork bomb" }, // :(){:|:&};:
   ];
 
+  const envFilePattern = /\.env($|\.(?!example))/;
+
   const protectedPaths = [
-    { pattern: /\.env($|\.(?!example))/, desc: "environment file", mode: "confirm" }, // .env, .env.local (but not .env.example)
+    { pattern: envFilePattern, desc: "environment file", mode: "confirm" }, // .env, .env.local (but not .env.example)
     { pattern: /\.dev\.vars($|\.[^/]+$)/, desc: "dev vars file", mode: "confirm" }, // .dev.vars
     { pattern: /node_modules\//, desc: "node_modules", mode: "confirm" }, // node_modules/
     { pattern: /^\.git\/|\/\.git\//, desc: "git directory", mode: "confirm" }, // .git/
@@ -176,6 +217,24 @@ export default function (pi: ExtensionAPI) {
           return { block: true, reason: `Blocked dangerous bash write (${desc}) by user` };
         }
         break;
+      }
+
+      return undefined;
+    }
+
+    if (event.toolName === "read") {
+      const filePath = event.input.path as string;
+      const normalizedPath = path.normalize(filePath);
+
+      if (envFilePattern.test(normalizedPath)) {
+        const absolutePath = path.isAbsolute(filePath)
+          ? filePath
+          : path.resolve(process.cwd(), filePath);
+
+        return {
+          block: true,
+          reason: buildEnvReadBlockReason(filePath, absolutePath),
+        };
       }
 
       return undefined;
