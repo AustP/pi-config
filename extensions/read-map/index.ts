@@ -96,6 +96,8 @@ export default function piReadMapExtension(pi: ExtensionAPI): void {
     name: "read",
     label: "Read",
     description: `Read the contents of a file. Supports text files and images (jpg, png, gif, webp). Images are sent as attachments. For text files, output is truncated to ${DEFAULT_MAX_LINES} lines or ${Math.round(DEFAULT_MAX_BYTES / 1024)}KB (whichever is hit first). If truncated, a structural map of the file is included to enable targeted reads. Use offset/limit for large files.`,
+    promptSnippet: "Read file contents",
+    promptGuidelines: ["Use read to examine files instead of cat or sed."],
     parameters: Type.Object({
       path: Type.String({
         description: "Path to the file to read (relative or absolute)",
