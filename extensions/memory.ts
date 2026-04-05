@@ -275,16 +275,16 @@ async function handleMemoryInstruction(pi: ExtensionAPI, ctx: ExtensionContext, 
 		existingContent = fs.readFileSync(location.filePath, "utf-8");
 	}
 
-	// Get model and API key
+	// Get model and request auth
 	const model = ctx.model;
 	if (!model) {
 		ctx.ui.notify("No model selected", "error");
 		return;
 	}
 
-	const apiKey = await ctx.modelRegistry.getApiKey(model);
-	if (!apiKey) {
-		ctx.ui.notify("No API key available for current model", "error");
+	const auth = await ctx.modelRegistry.getApiKeyAndHeaders(model);
+	if (!auth.ok) {
+		ctx.ui.notify(auth.error, "error");
 		return;
 	}
 
@@ -329,7 +329,7 @@ Output the complete file content:`;
 					systemPrompt,
 					messages: [{ role: "user", content: [{ type: "text", text: userPrompt }], timestamp: Date.now() }],
 				},
-				{ apiKey, signal: component.signal, maxTokens: 4096 },
+				{ apiKey: auth.apiKey, headers: auth.headers, signal: component.signal, maxTokens: 4096 },
 			);
 
 			if (response.stopReason === "aborted") {
