@@ -1,0 +1,10 @@
+artifacts/*
+!artifacts/bin/
+!artifacts/models/
+!artifacts/outputs/
+artifacts/bin/*
+artifacts/models/*
+artifacts/outputs/*
+!artifacts/bin/.gitkeep
+!artifacts/models/.gitkeep
+!artifacts/outputs/.gitkeep

@@ -1,3 +1,6 @@
 node_modules/
 
 .DS_Store
+
+# Skill build/download artifacts
+skills/iris-mps-image-gen/artifacts/
