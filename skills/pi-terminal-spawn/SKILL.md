@@ -14,6 +14,7 @@ Use this skill when the user wants to start a separate Pi instance in a differen
   - Starts Pi with a chosen `--cwd`
   - Supports `interactive` mode (normal Pi TUI)
   - Supports `rpc` mode with startup commands (e.g. `/discord`, `/speak`)
+  - By default inherits active mode commands from current env and auto-sends them in the new session (`/discord` from `DISCORD_PI_PID`; `/speak` from `SPEAK_PI_PID` / `SPEAK_MODE_ENABLED` / `PI_SPEAK_ENABLED`)
 
 - `scripts/run-pi-rpc-bootstrap.mjs`
   - Helper used by `open-pi-terminal.mjs` for RPC startup command bootstrapping
@@ -25,6 +26,14 @@ Use this skill when the user wants to start a separate Pi instance in a differen
 ```bash
 node /Users/aust/projects/pi/pi-config/skills/pi-terminal-spawn/scripts/open-pi-terminal.mjs \
   --cwd /path/to/project
+```
+
+### Interactive Pi in a new terminal without inheriting active modes
+
+```bash
+node /Users/aust/projects/pi/pi-config/skills/pi-terminal-spawn/scripts/open-pi-terminal.mjs \
+  --cwd /path/to/project \
+  --no-inherit-active-modes
 ```
 
 ### RPC Pi in a new terminal with startup commands
@@ -41,4 +50,5 @@ node /Users/aust/projects/pi/pi-config/skills/pi-terminal-spawn/scripts/open-pi-
 
 - This skill is macOS Terminal.app oriented.
 - In `rpc` mode, startup commands are sent as RPC `prompt` commands after boot.
+- If active mode commands are inherited while `--mode interactive` is selected, the launcher auto-switches to `rpc` so it can send startup commands.
 - For `/discord` ownership handoff, launching the new instance and running `/discord` is enough; old bridges self-yield on lock mismatch.
